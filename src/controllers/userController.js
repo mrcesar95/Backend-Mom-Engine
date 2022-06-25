@@ -1,5 +1,6 @@
 const getModelByName = require('../db/getModelByName');
 
+
 module.exports.singup = function (req, res) {
 	if (!req.body.user) return res.status(200).send({ success: false, error: 'user ninfo5 not found'});
 
