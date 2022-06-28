@@ -31,3 +31,23 @@ module.exports.confirmAccount = function (req, res) {
 	}
 }
 
+module.exports.login = function (req, res) {
+	if (!req.body.email) return res.status(200).send({ success: false, error: "email not provided" });
+	if (!req.body.password) return res.status(200).send({ success: false, error: "password not provided" });
+
+	const User = getModelByName('user');
+
+	try {
+		User.login(req.body.email, req.body.password)
+		.then(data => {
+			res.status(200).send({ success:true, data});
+		}).catch(err => res.status(200).send({ success: false, error: err.message}));
+
+	} catch(err) {
+		res.status(200).send( { success: false, error: err.message});
+	}
+
+
+}
+
+

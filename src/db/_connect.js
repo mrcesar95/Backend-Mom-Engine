@@ -16,4 +16,4 @@ function _connect () {
 
 }
 
-module.exports = _connect
+module.exports = _connect;

@@ -36,6 +36,7 @@ const UserSchema = mongoose.Schema({
 UserSchema.statics.singup = singup;
 UserSchema.statics.sendConfirmationEmail = sendConfirmationEmail;
 UserSchema.statics.confirmAccount = confirmAccount;
+UserSchema.statics.login = login;
 
 
 mongoose.model('user', UserSchema, 'users');
@@ -83,11 +84,12 @@ function sendConfirmationEmail(user) {
 
 	const urlConfirm = `${process.env.APIGATEWAY_URL}/account/confirm/${token}`;
 	return transporter.sendMail({
-	  from: process.env.MAIL_ADMIN_ADDRESS,
-	  to: user.email,
-	  subject: "Please confirm your email",
-	  html: `<p>Confirm Your Email: <a href="${urlConfirm}">Confirm</a></p>`,
-	}).then(() => user)
+		from: process.env.MAIL_ADMIN_ADDRESS,
+		to: user.email,
+		subject: "Please confirm your email",
+		html: `<p>Confirm Your Email: <a href="${urlConfirm}">Confirm</a></p>`,
+	});
+	return user;
   }
 
 function confirmAccount(token) {
@@ -110,3 +112,32 @@ function confirmAccount(token) {
 	});
 
 }
+
+
+function login(email, password) {
+	if (!isValidEmail(email)) throw new Error('email is invalid');
+  
+	return this.findOne({ email })
+	  .then(user => {
+		if (!user) throw new Error('incorrect credentials');
+		if (!user.emailVerified) throw new Error('user is not confirmed');
+  
+		const isMatch = bcrypt.compareSync(password, user.password);
+		if (!isMatch) throw new Error('incorrect credentials');
+  
+		const userObject = {
+		  _id: user._id,
+		  email: user.email,
+		  emailVerified: user.emailVerified,
+		  firstName: user.firstName,
+		  lastName: user.lastName,
+		};
+		const access_token = jwt.sign(Object.assign({}, userObject), process.env.TOKEN_SECRET, {
+		  expiresIn: 60 * 60 * 4, // seconds
+		});
+  
+		return {
+		  access_token,
+		}
+	  })
+  }
